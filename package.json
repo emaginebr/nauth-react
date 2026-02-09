@@ -59,7 +59,6 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "preversion": "npm run build",
-    "prepublishOnly": "npm version patch",
     "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
