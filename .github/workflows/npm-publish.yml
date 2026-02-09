@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 1.0.0)'
+        required: true
 
 jobs:
   publish:
@@ -25,10 +29,14 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Extract version from tag
+    - name: Extract version
       id: version
       run: |
-        VERSION="${GITHUB_REF_NAME#v}"
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${GITHUB_REF_NAME#v}"
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Publishing version: $VERSION"
 

@@ -1,9 +1,11 @@
 # nauth-react
 
-Modern React authentication component library for NAuth API integration. Built with TypeScript, Tailwind CSS, and designed as a distributable NPM package.
+Modern React authentication component library for [NAuth API](https://github.com/landim32/NAuth.API) integration. Built with TypeScript, Tailwind CSS, and designed as a distributable NPM package.
 
 [![npm version](https://img.shields.io/npm/v/nauth-react.svg)](https://www.npmjs.com/package/nauth-react)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> **Part of the NAuth ecosystem** — see [NAuth.API](https://github.com/landim32/NAuth.API) for the main project and full documentation.
 
 ## Features
 
@@ -315,6 +317,18 @@ npm run build
 npm publish --access public
 ```
 
+## NAuth Ecosystem
+
+This package is part of the **NAuth** ecosystem. The main project is [NAuth.API](https://github.com/landim32/NAuth.API).
+
+| Project | Description |
+|---------|-------------|
+| **[NAuth.API](https://github.com/landim32/NAuth.API)** | Central REST API backend (main project) |
+| **[NAuth.DTO](https://github.com/landim32/NAuth.DTO)** | Shared Data Transfer Objects (NuGet) |
+| **[NAuth.ACL](https://github.com/landim32/NAuth.ACL)** | HTTP client library (NuGet) |
+| **nauth-react** | React component library — you are here |
+| **[NAuth.App](https://github.com/landim32/NAuth.APP)** | Frontend web application |
+
 ## License
 
 MIT © [Rodrigo Landim](https://github.com/landim32)
@@ -323,3 +337,4 @@ MIT © [Rodrigo Landim](https://github.com/landim32)
 
 - [GitHub](https://github.com/landim32/NAuth.React)
 - [NPM](https://www.npmjs.com/package/nauth-react)
+- [NAuth.API (main project)](https://github.com/landim32/NAuth.API)
