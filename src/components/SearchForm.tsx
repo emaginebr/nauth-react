@@ -6,19 +6,20 @@ import { Label } from './ui/label';
 import type { SearchFormProps, UserInfo, PagedResult } from '../types';
 import { cn } from '../utils/cn';
 import { useNAuth } from '../contexts/NAuthContext';
-
-const STATUS_LABELS: Record<number, string> = {
-  1: 'Active',
-  2: 'Inactive',
-  3: 'Suspended',
-  4: 'Blocked',
-};
+import { useNAuthTranslation } from '../i18n';
 
 const STATUS_COLORS: Record<number, string> = {
   1: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   2: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
   3: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   4: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+};
+
+const STATUS_KEYS: Record<number, string> = {
+  1: 'status.active',
+  2: 'status.inactive',
+  3: 'status.suspended',
+  4: 'status.blocked',
 };
 
 export const SearchForm: React.FC<SearchFormProps> = ({
@@ -32,6 +33,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   styles = {},
 }) => {
   const {searchUsers} = useNAuth();
+  const { t } = useNAuthTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -44,7 +46,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setPage(1); // Reset to first page when search term changes
+      setPage(1);
     }, 500);
 
     return () => clearTimeout(timer);
@@ -78,14 +80,13 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     }
   }, [searchUsers, debouncedSearchTerm, page, pageSize, onSuccess, onError]);
 
-  // Perform search when dependencies change
   useEffect(() => {
     performSearch();
   }, [performSearch]);
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize);
-    setPage(1); // Reset to first page when page size changes
+    setPage(1);
   };
 
   const handlePreviousPage = () => {
@@ -108,8 +109,8 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
   const getStatusBadge = (status?: number) => {
     if (!status) return null;
-    
-    const label = STATUS_LABELS[status] || 'Unknown';
+
+    const label = t(STATUS_KEYS[status] || 'status.unknown');
     const colorClass = STATUS_COLORS[status] || STATUS_COLORS[2];
 
     return (
@@ -132,13 +133,13 @@ export const SearchForm: React.FC<SearchFormProps> = ({
     <div className={cn('space-y-6', styles.container, className)}>
       {/* Search Bar */}
       <div className={cn('space-y-2', styles.searchBar)}>
-        <Label htmlFor="search">Search Users</Label>
+        <Label htmlFor="search">{t('search.searchUsers')}</Label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             id="search"
             type="text"
-            placeholder="Search by name, email..."
+            placeholder={t('search.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -149,7 +150,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
 
       {/* Page Size Selector */}
       <div className="flex items-center gap-4">
-        <Label htmlFor="pageSize" className="whitespace-nowrap">Items per page:</Label>
+        <Label htmlFor="pageSize" className="whitespace-nowrap">{t('common.itemsPerPage')}</Label>
         <select
           id="pageSize"
           value={pageSize}
@@ -169,7 +170,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading users...</span>
+          <span className="ml-2">{t('search.loadingUsers')}</span>
         </div>
       )}
 
@@ -178,11 +179,11 @@ export const SearchForm: React.FC<SearchFormProps> = ({
         <div className="flex items-center gap-2 p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-md">
           <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-red-800 dark:text-red-200">Error</p>
+            <p className="text-sm font-medium text-red-800 dark:text-red-200">{t('common.error')}</p>
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
           <Button variant="outline" size="sm" onClick={performSearch}>
-            Retry
+            {t('common.retry')}
           </Button>
         </div>
       )}
@@ -197,20 +198,20 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                   <tr>
                     {showUserAvatar && (
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Avatar
+                        {t('search.avatar')}
                       </th>
                     )}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Name
+                      {t('common.name')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Email
+                      {t('common.email')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
+                      {t('search.status')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Roles
+                      {t('search.roles')}
                     </th>
                   </tr>
                 </thead>
@@ -221,7 +222,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                         colSpan={showUserAvatar ? 5 : 4}
                         className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                       >
-                        No users found. Try a different search term.
+                        {t('search.noUsersFound')}
                       </td>
                     </tr>
                   ) : (
@@ -256,7 +257,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                               </div>
                               {user.isAdmin && (
                                 <span className="text-xs text-blue-600 dark:text-blue-400">
-                                  Admin
+                                  {t('common.admin')}
                                 </span>
                               )}
                             </div>
@@ -282,7 +283,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                                 </span>
                               ))
                             ) : (
-                              <span className="text-sm text-gray-400">No roles</span>
+                              <span className="text-sm text-gray-400">{t('common.noRoles')}</span>
                             )}
                           </div>
                         </td>
@@ -297,13 +298,16 @@ export const SearchForm: React.FC<SearchFormProps> = ({
           {/* Pagination Controls */}
           <div className={cn('flex items-center justify-between', styles.pagination)}>
             <div className="text-sm text-gray-700 dark:text-gray-300">
-              Showing {result.items.length > 0 ? ((page - 1) * pageSize + 1) : 0} to{' '}
-              {Math.min(page * pageSize, result.totalCount)} of {result.totalCount} users
+              {t('search.showingUsers', {
+                from: result.items.length > 0 ? ((page - 1) * pageSize + 1) : 0,
+                to: Math.min(page * pageSize, result.totalCount),
+                total: result.totalCount,
+              })}
             </div>
 
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                Page {page} of {result.totalPages || 1}
+                {t('common.pageOf', { page, totalPages: result.totalPages || 1 })}
               </div>
 
               <div className="flex gap-2">
@@ -314,7 +318,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                   disabled={!result.hasPreviousPage || isLoading}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
+                  {t('common.previous')}
                 </Button>
 
                 <Button
@@ -323,7 +327,7 @@ export const SearchForm: React.FC<SearchFormProps> = ({
                   onClick={handleNextPage}
                   disabled={!result.hasNextPage || isLoading}
                 >
-                  Next
+                  {t('common.next')}
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>

@@ -43,12 +43,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/landim32/NAuth.React"
+    "url": "https://github.com/emaginebr/nauth-react"
   },
   "bugs": {
-    "url": "https://github.com/landim32/NAuth.React/issues"
+    "url": "https://github.com/emaginebr/nauth-react/issues"
   },
-  "homepage": "https://github.com/landim32/NAuth.React#readme",
+  "homepage": "https://github.com/emaginebr/nauth-react#readme",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -82,9 +82,11 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "i18next": "^25.8.10",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "react-hook-form": "^7.61.1",
+    "react-i18next": "^16.5.4",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.25.76"
   },

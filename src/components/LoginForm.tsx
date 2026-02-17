@@ -1,33 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNAuth } from '../contexts/NAuthContext';
+import { useNAuthTranslation } from '../i18n';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import type { LoginFormProps } from '../types';
 import { cn } from '../utils/cn';
 
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
 
-type LoginFormData = z.infer<typeof loginSchema>;
+function createLoginSchema(t: (key: string) => string) {
+  return z.object({
+    email: z.string().email(t('validation.emailInvalid')),
+    password: z.string().min(1, t('validation.passwordRequired')),
+  });
+}
 
 export const LoginForm: React.FC<LoginFormProps> = ({
   onSuccess,
   onError,
   showRememberMe = false,
-  customSubmitText = 'Sign In',
+  customSubmitText,
   className,
   styles = {},
 }) => {
   const { login } = useNAuth();
+  const { t } = useNAuthTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const loginSchema = useMemo(() => createLoginSchema(t), [t]);
 
   const {
     register,
@@ -57,11 +63,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={cn('space-y-6', styles.container, className)}>
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('common.email')}</Label>
         <Input
           id="email"
           type="email"
-          placeholder="name@example.com"
+          placeholder={t('login.emailPlaceholder')}
           className={styles.input}
           {...register('email')}
           disabled={isLoading}
@@ -72,12 +78,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t('common.password')}</Label>
         <div className="relative">
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
-            placeholder="Enter your password"
+            placeholder={t('login.passwordPlaceholder')}
             className={cn('pr-10', styles.input)}
             {...register('password')}
             disabled={isLoading}
@@ -104,7 +110,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             className="h-4 w-4 rounded border-gray-300"
           />
           <Label htmlFor="remember" className="text-sm font-normal">
-            Remember me
+            {t('login.rememberMe')}
           </Label>
         </div>
       )}
@@ -117,10 +123,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            {t('login.signingIn')}
           </>
         ) : (
-          customSubmitText
+          customSubmitText || t('login.signIn')
         )}
       </Button>
     </form>

@@ -1,21 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useNAuth } from '../contexts/NAuthContext';
+import { useNAuthTranslation } from '../i18n';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import type { RoleFormProps } from '../types';
 import { cn } from '../utils/cn';
 
-const roleSchema = z.object({
-  name: z.string().min(1, 'Role name is required'),
-  slug: z.string().optional(),
-});
+function createRoleSchema(t: (key: string) => string) {
+  return z.object({
+    name: z.string().min(1, t('validation.roleNameRequired')),
+    slug: z.string().optional(),
+  });
+}
 
-type RoleFormData = z.infer<typeof roleSchema>;
+type RoleFormData = z.infer<ReturnType<typeof createRoleSchema>>;
 
 export const RoleForm: React.FC<RoleFormProps> = ({
   roleId,
@@ -25,10 +28,13 @@ export const RoleForm: React.FC<RoleFormProps> = ({
   className,
 }) => {
   const { user, getRoleById, createRole, updateRole } = useNAuth();
+  const { t } = useNAuthTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingRole, setIsLoadingRole] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isEditMode = roleId !== undefined && roleId > 0;
+
+  const roleSchema = useMemo(() => createRoleSchema(t), [t]);
 
   const {
     register,
@@ -48,7 +54,6 @@ export const RoleForm: React.FC<RoleFormProps> = ({
   const nameValue = watch('name');
   const slugValue = watch('slug');
 
-  // Generate slug from name
   const generateSlug = (name: string): string => {
     return name
       .toLowerCase()
@@ -59,7 +64,6 @@ export const RoleForm: React.FC<RoleFormProps> = ({
       .replace(/^-|-$/g, '');
   };
 
-  // Load role data for edit mode
   useEffect(() => {
     if (isEditMode) {
       const loadRole = async () => {
@@ -71,7 +75,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           setValue('name', data.name);
           setValue('slug', data.slug);
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to load role';
+          const errorMessage = err instanceof Error ? err.message : t('roles.failedToLoadRole');
           setError(errorMessage);
           if (onError) {
             onError(err instanceof Error ? err : new Error(errorMessage));
@@ -83,7 +87,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
 
       loadRole();
     }
-  }, [roleId, isEditMode, setValue, onError, getRoleById]);
+  }, [roleId, isEditMode, setValue, onError, getRoleById, t]);
 
   const onSubmit = async (data: RoleFormData) => {
     setIsLoading(true);
@@ -96,7 +100,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
         slug: data.slug || '',
       };
 
-      const result = isEditMode 
+      const result = isEditMode
         ? await updateRole(payload)
         : await createRole(payload);
 
@@ -104,12 +108,11 @@ export const RoleForm: React.FC<RoleFormProps> = ({
         onSuccess(result);
       }
 
-      // Reset form if in create mode
       if (!isEditMode) {
         reset();
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save role';
+      const errorMessage = err instanceof Error ? err.message : t('roles.failedToSaveRole');
       setError(errorMessage);
       if (onError) {
         onError(err instanceof Error ? err : new Error(errorMessage));
@@ -130,14 +133,13 @@ export const RoleForm: React.FC<RoleFormProps> = ({
     }
   };
 
-  // Check if user is admin
   const isAdmin = user?.isAdmin ?? false;
 
   if (!isAdmin) {
     return (
       <div className={cn('flex items-center gap-2 text-destructive', className)}>
         <AlertCircle size={20} />
-        <p>You do not have permission to manage roles. Admin access required.</p>
+        <p>{t('roles.permissionDeniedManage')}</p>
       </div>
     );
   }
@@ -150,12 +152,10 @@ export const RoleForm: React.FC<RoleFormProps> = ({
     );
   }
 
-  // Preview slug generation
   const previewSlug = slugValue || generateSlug(nameValue);
 
   return (
     <div className={cn('space-y-6', className)}>
-      {/* Error Message */}
       {error && (
         <div className="p-4 bg-destructive/10 text-destructive rounded-lg border border-destructive/20 flex items-center gap-2">
           <AlertCircle size={18} />
@@ -163,17 +163,15 @@ export const RoleForm: React.FC<RoleFormProps> = ({
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Name Field */}
         <div className="space-y-2">
           <Label htmlFor="name">
-            Name <span className="text-destructive">*</span>
+            {t('roles.roleName')} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="name"
             type="text"
-            placeholder="Enter role name"
+            placeholder={t('roles.enterRoleName')}
             {...register('name')}
             disabled={isLoading}
           />
@@ -182,15 +180,14 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           )}
         </div>
 
-        {/* Slug Field */}
         <div className="space-y-2">
           <Label htmlFor="slug">
-            Slug <span className="text-sm text-muted-foreground">(optional - auto-generated from name)</span>
+            {t('roles.slugLabel')} <span className="text-sm text-muted-foreground">{t('roles.slugOptional')}</span>
           </Label>
           <Input
             id="slug"
             type="text"
-            placeholder="Enter custom slug or leave empty"
+            placeholder={t('roles.slugPlaceholder')}
             {...register('slug')}
             disabled={isLoading}
           />
@@ -199,33 +196,31 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           )}
           {previewSlug && (
             <p className="text-sm text-muted-foreground">
-              Preview: <span className="font-mono">{previewSlug}</span>
+              {t('roles.slugPreview')} <span className="font-mono">{previewSlug}</span>
             </p>
           )}
         </div>
 
-        {/* Required Fields Note */}
         <p className="text-sm text-muted-foreground">
-          <span className="text-destructive">*</span> Required fields
+          <span className="text-destructive">*</span> {t('common.requiredFields')}
         </p>
 
-        {/* Form Actions */}
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="flex items-center gap-2">
             {onCancel && (
               <Button type="button" variant="outline" onClick={handleCancel} disabled={isLoading}>
-                Cancel
+                {t('common.cancel')}
               </Button>
             )}
             {!isEditMode && (
               <Button type="button" variant="outline" onClick={handleReset} disabled={isLoading}>
-                Reset
+                {t('common.reset')}
               </Button>
             )}
           </div>
           <Button type="submit" disabled={isLoading} className="flex items-center gap-2">
             {isLoading && <Loader2 className="animate-spin" size={16} />}
-            {isEditMode ? 'Update Role' : 'Create Role'}
+            {isEditMode ? t('roles.updateRole') : t('roles.createRole')}
           </Button>
         </div>
       </form>

@@ -131,7 +131,7 @@ export class NAuthAPI {
     this.getStorage().removeItem(this.config.storageKey || 'nauth_token');
   }
 
-  private log(method: string, ...args: any[]): void {
+  private log(method: string, ...args: unknown[]): void {
     if (this.isDevelopment) {
       console.log(`[NAuthAPI.${method}]`, ...args);
     }
