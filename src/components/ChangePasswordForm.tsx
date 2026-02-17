@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNAuth } from '../contexts/NAuthContext';
+import { useNAuthTranslation } from '../i18n';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -11,24 +12,26 @@ import type { ChangePasswordFormProps } from '../types';
 import { cn } from '../utils/cn';
 import { validatePasswordStrength } from '../utils/validators';
 
-const changePasswordSchema = z
-  .object({
-    oldPassword: z.string().optional(),
-    newPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+function createChangePasswordSchema(t: (key: string) => string) {
+  return z
+    .object({
+      oldPassword: z.string().optional(),
+      newPassword: z
+        .string()
+        .min(8, t('validation.passwordMinLength'))
+        .regex(/[A-Z]/, t('validation.passwordUppercase'))
+        .regex(/[a-z]/, t('validation.passwordLowercase'))
+        .regex(/[0-9]/, t('validation.passwordNumber'))
+        .regex(/[^A-Za-z0-9]/, t('validation.passwordSpecialChar')),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('validation.passwordsDontMatch'),
+      path: ['confirmPassword'],
+    });
+}
 
-type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+type ChangePasswordFormData = z.infer<ReturnType<typeof createChangePasswordSchema>>;
 
 export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   onSuccess,
@@ -36,11 +39,14 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   className,
 }) => {
   const { changePassword, hasPassword } = useNAuth();
+  const { t } = useNAuthTranslation();
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userHasPassword, setUserHasPassword] = useState(true);
+
+  const changePasswordSchema = useMemo(() => createChangePasswordSchema(t), [t]);
 
   const {
     register,
@@ -52,7 +58,7 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
   });
 
   const password = watch('newPassword');
-  const passwordStrength = password ? validatePasswordStrength(password) : null;
+  const passwordStrength = password ? validatePasswordStrength(password, { t }) : null;
 
   useEffect(() => {
     const checkPassword = async () => {
@@ -73,7 +79,7 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
         oldPassword: data.oldPassword,
         newPassword: data.newPassword,
       });
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -97,12 +103,12 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className={cn('space-y-6', className)}>
           {userHasPassword && (
             <div className="space-y-2">
-              <Label htmlFor="oldPassword">Current Password</Label>
+              <Label htmlFor="oldPassword">{t('changePassword.currentPassword')}</Label>
               <div className="relative">
                 <Input
                   id="oldPassword"
                   type={showOldPassword ? 'text' : 'password'}
-                  placeholder="Enter your current password"
+                  placeholder={t('changePassword.currentPasswordPlaceholder')}
                   className="pr-10"
                   {...register('oldPassword')}
                   disabled={isLoading}
@@ -123,12 +129,12 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
+            <Label htmlFor="newPassword">{t('changePassword.newPassword')}</Label>
             <div className="relative">
               <Input
                 id="newPassword"
                 type={showNewPassword ? 'text' : 'password'}
-                placeholder="Create a strong password"
+                placeholder={t('changePassword.newPasswordPlaceholder')}
                 className="pr-10"
                 {...register('newPassword')}
                 disabled={isLoading}
@@ -170,12 +176,12 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">{t('changePassword.confirmNewPassword')}</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirm your new password"
+                placeholder={t('changePassword.confirmPasswordPlaceholder')}
                 className="pr-10"
                 {...register('confirmPassword')}
                 disabled={isLoading}
@@ -202,10 +208,10 @@ export const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Changing password...
+                {t('changePassword.changingPassword')}
               </>
             ) : (
-              'Change Password'
+              t('changePassword.changePassword')
             )}
           </Button>
     </form>

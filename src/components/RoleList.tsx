@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Trash2, Edit, Plus, Loader2, Search, AlertCircle } from 'lucide-react';
 import { useNAuth } from '../contexts/NAuthContext';
+import { useNAuthTranslation } from '../i18n';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -20,6 +21,7 @@ export const RoleList: React.FC<RoleListProps> = ({
     styles = {},
 }) => {
     const { user, fetchRoles: fetchRolesAPI, deleteRole: deleteRoleAPI } = useNAuth();
+    const { t } = useNAuthTranslation();
     const [roles, setRoles] = useState<RoleInfo[]>([]);
     const [filteredRoles, setFilteredRoles] = useState<RoleInfo[]>([]);
     const [loading, setLoading] = useState(true);
@@ -31,7 +33,6 @@ export const RoleList: React.FC<RoleListProps> = ({
     const [roleToDelete, setRoleToDelete] = useState<RoleInfo | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Fetch roles from API
     const fetchRoles = async () => {
         setLoading(true);
         setError(null);
@@ -53,9 +54,9 @@ export const RoleList: React.FC<RoleListProps> = ({
 
     useEffect(() => {
         fetchRoles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Filter roles based on search term
     useEffect(() => {
         if (searchTerm) {
             const filtered = roles.filter(
@@ -64,13 +65,12 @@ export const RoleList: React.FC<RoleListProps> = ({
                     role.slug.toLowerCase().includes(searchTerm.toLowerCase())
             );
             setFilteredRoles(filtered);
-            setCurrentPage(1); // Reset to first page when searching
+            setCurrentPage(1);
         } else {
             setFilteredRoles(roles);
         }
     }, [searchTerm, roles]);
 
-    // Calculate pagination
     const { paginatedRoles, totalPages, hasPreviousPage, hasNextPage } = useMemo(() => {
         const startIndex = (currentPage - 1) * pageSize;
         const endIndex = startIndex + pageSize;
@@ -91,7 +91,7 @@ export const RoleList: React.FC<RoleListProps> = ({
 
     const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setPageSize(Number(e.target.value));
-        setCurrentPage(1); // Reset to first page when changing page size
+        setCurrentPage(1);
     };
 
     const handlePreviousPage = () => {
@@ -124,8 +124,6 @@ export const RoleList: React.FC<RoleListProps> = ({
 
         try {
             await deleteRoleAPI(roleToDelete.roleId);
-
-            // Success - refresh the list
             await fetchRoles();
 
             if (onDelete) {
@@ -161,14 +159,13 @@ export const RoleList: React.FC<RoleListProps> = ({
         }
     };
 
-    // Check if user is admin
     const isAdmin = user?.isAdmin ?? false;
 
     if (!isAdmin) {
         return (
             <div className={cn('flex items-center gap-2 text-red-400', className)}>
                 <AlertCircle size={20} />
-                <p>You do not have permission to view roles. Admin access required.</p>
+                <p>{t('roles.permissionDeniedView')}</p>
             </div>
         );
     }
@@ -181,7 +178,7 @@ export const RoleList: React.FC<RoleListProps> = ({
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <Input
                         type="text"
-                        placeholder="Search by name or slug..."
+                        placeholder={t('roles.searchPlaceholder')}
                         value={searchTerm}
                         onChange={handleSearchChange}
                         className="pl-10"
@@ -193,7 +190,7 @@ export const RoleList: React.FC<RoleListProps> = ({
                         className="flex items-center gap-2 shrink-0"
                     >
                         <Plus size={16} />
-                        Create Role
+                        {t('roles.createRole')}
                     </Button>
                 )}
             </div>
@@ -218,17 +215,17 @@ export const RoleList: React.FC<RoleListProps> = ({
                         <table className="w-full">
                             <thead className="bg-muted/50">
                                 <tr>
-                                    <th className="text-left p-4 font-semibold">ID</th>
-                                    <th className="text-left p-4 font-semibold">Name</th>
-                                    <th className="text-left p-4 font-semibold">Slug</th>
-                                    <th className="text-right p-4 font-semibold">Actions</th>
+                                    <th className="text-left p-4 font-semibold">{t('common.id')}</th>
+                                    <th className="text-left p-4 font-semibold">{t('common.name')}</th>
+                                    <th className="text-left p-4 font-semibold">{t('common.slug')}</th>
+                                    <th className="text-right p-4 font-semibold">{t('common.actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginatedRoles.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="text-center p-8 text-muted-foreground">
-                                            {searchTerm ? 'No roles found matching your search.' : 'No roles available.'}
+                                            {searchTerm ? t('roles.noRolesFound') : t('roles.noRolesAvailable')}
                                         </td>
                                     </tr>
                                 ) : (
@@ -253,7 +250,7 @@ export const RoleList: React.FC<RoleListProps> = ({
                                                         className="flex items-center gap-1 bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 hover:text-white"
                                                     >
                                                         <Edit size={14} />
-                                                        Edit
+                                                        {t('common.edit')}
                                                     </Button>
                                                     <Button
                                                         variant="destructive"
@@ -265,7 +262,7 @@ export const RoleList: React.FC<RoleListProps> = ({
                                                         className="flex items-center gap-1"
                                                     >
                                                         <Trash2 size={14} />
-                                                        Delete
+                                                        {t('common.delete')}
                                                     </Button>
                                                 </div>
                                             </td>
@@ -281,13 +278,15 @@ export const RoleList: React.FC<RoleListProps> = ({
                         <div className={cn('flex items-center justify-between', styles.pagination)}>
                             <div className="flex items-center gap-2 text-sm text-gray-200">
                                 <span>
-                                    Showing {(currentPage - 1) * pageSize + 1}-
-                                    {Math.min(currentPage * pageSize, filteredRoles.length)} of{' '}
-                                    {filteredRoles.length}
+                                    {t('common.showingRange', {
+                                        from: (currentPage - 1) * pageSize + 1,
+                                        to: Math.min(currentPage * pageSize, filteredRoles.length),
+                                        total: filteredRoles.length,
+                                    })}
                                 </span>
                                 <span className="mx-2">|</span>
                                 <Label htmlFor="pageSize" className="text-sm text-gray-200">
-                                    Items per page:
+                                    {t('common.itemsPerPage')}
                                 </Label>
                                 <select
                                     id="pageSize"
@@ -311,10 +310,10 @@ export const RoleList: React.FC<RoleListProps> = ({
                                     disabled={!hasPreviousPage}
                                     className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700"
                                 >
-                                    Previous
+                                    {t('common.previous')}
                                 </Button>
                                 <span className="text-sm text-gray-300">
-                                    Page {currentPage} of {totalPages}
+                                    {t('common.pageOf', { page: currentPage, totalPages })}
                                 </span>
                                 <Button
                                     variant="outline"
@@ -323,7 +322,7 @@ export const RoleList: React.FC<RoleListProps> = ({
                                     disabled={!hasNextPage}
                                     className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700"
                                 >
-                                    Next
+                                    {t('common.next')}
                                 </Button>
                             </div>
                         </div>
@@ -335,14 +334,16 @@ export const RoleList: React.FC<RoleListProps> = ({
             {showDeleteConfirm && roleToDelete && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-card p-6 rounded-lg border shadow-lg max-w-md w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-2">Confirm Delete</h3>
-                        <p className="text-muted-foreground mb-6">
-                            Are you sure you want to delete the role <strong>{roleToDelete.name}</strong>?
-                            This action cannot be undone.
-                        </p>
+                        <h3 className="text-lg font-semibold mb-2">{t('roles.confirmDelete')}</h3>
+                        <p
+                            className="text-muted-foreground mb-6"
+                            dangerouslySetInnerHTML={{
+                                __html: t('roles.confirmDeleteMessage', { name: roleToDelete.name }),
+                            }}
+                        />
                         <div className="flex items-center justify-end gap-2">
                             <Button variant="outline" onClick={cancelDelete} disabled={isDeleting}>
-                                Cancel
+                                {t('common.cancel')}
                             </Button>
                             <Button
                                 variant="destructive"
@@ -351,7 +352,7 @@ export const RoleList: React.FC<RoleListProps> = ({
                                 className="flex items-center gap-2"
                             >
                                 {isDeleting && <Loader2 className="animate-spin" size={16} />}
-                                Delete
+                                {t('common.delete')}
                             </Button>
                         </div>
                     </div>

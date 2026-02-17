@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import { createNAuthClient } from '../services/nauth-api';
+import { createNAuthI18nInstance } from '../i18n';
 import type {
   UserInfo,
   NAuthConfig,
@@ -24,17 +26,32 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
 
   const api = useMemo(() => createNAuthClient(config), [config]);
 
+  // Create i18n instance
+  const i18nInstance = useMemo(
+    () => createNAuthI18nInstance(config.language, config.translations),
+    [config.language, config.translations]
+  );
+
+  // Update language when config changes
+  const prevLanguageRef = useRef(config.language);
+  useEffect(() => {
+    if (prevLanguageRef.current !== config.language && config.language) {
+      i18nInstance.changeLanguage(config.language);
+      prevLanguageRef.current = config.language;
+    }
+  }, [config.language, i18nInstance]);
+
   // Initialize authentication state
   useEffect(() => {
     const initAuth = async () => {
       try {
         const storedToken = api.getCurrentToken();
-        
+
         if (storedToken) {
           setToken(storedToken);
           const userData = await api.getMe();
           setUser(userData);
-          
+
           if (config.onAuthChange) {
             config.onAuthChange(userData);
           }
@@ -59,11 +76,11 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
         const session = await api.login(credentials);
         setToken(session.token);
         setUser(session.user);
-        
+
         if (config.onAuthChange) {
           config.onAuthChange(session.user);
         }
-        
+
         return session.user;
       } finally {
         setIsLoading(false);
@@ -76,7 +93,7 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
     api.logout();
     setToken(null);
     setUser(null);
-    
+
     if (config.onAuthChange) {
       config.onAuthChange(null);
     }
@@ -101,11 +118,11 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
       try {
         const updatedUser = await api.updateUser(data);
         setUser(updatedUser);
-        
+
         if (config.onAuthChange) {
           config.onAuthChange(updatedUser);
         }
-        
+
         return updatedUser;
       } finally {
         setIsLoading(false);
@@ -162,16 +179,16 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
   const uploadImage = useCallback(
     async (file: File): Promise<string> => {
       const imageUrl = await api.uploadImage(file);
-      
+
       if (user) {
         const updatedUser = { ...user, imageUrl };
         setUser(updatedUser);
-        
+
         if (config.onAuthChange) {
           config.onAuthChange(updatedUser);
         }
       }
-      
+
       return imageUrl;
     },
     [api, user, config]
@@ -180,11 +197,11 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
   const refreshUser = useCallback(async (): Promise<UserInfo> => {
     const userData = await api.getMe();
     setUser(userData);
-    
+
     if (config.onAuthChange) {
       config.onAuthChange(userData);
     }
-    
+
     return userData;
   }, [api, config]);
 
@@ -252,16 +269,21 @@ export const NAuthProvider: React.FC<NAuthProviderProps> = ({ config, children }
     deleteRole,
   };
 
-  return <NAuthContext.Provider value={value}>{children}</NAuthContext.Provider>;
+  return (
+    <I18nextProvider i18n={i18nInstance}>
+      <NAuthContext.Provider value={value}>{children}</NAuthContext.Provider>
+    </I18nextProvider>
+  );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNAuth = (): NAuthContextValue => {
   const context = useContext(NAuthContext);
-  
+
   if (context === undefined) {
     throw new Error('useNAuth must be used within a NAuthProvider');
   }
-  
+
   return context;
 };
 

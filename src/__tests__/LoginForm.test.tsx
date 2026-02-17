@@ -3,8 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { LoginForm } from '../components/LoginForm';
 import { NAuthProvider } from '../contexts/NAuthContext';
 
-const mockLogin = vi.fn();
-
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <NAuthProvider config={{ apiUrl: 'http://test.com' }}>
     {children}
@@ -36,8 +34,8 @@ describe('LoginForm', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const submitButton = screen.getByRole('button', { name: /sign in/i });
 
-    fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
-    fireEvent.click(submitButton);
+    fireEvent.input(emailInput, { target: { value: 'invalid-email' } });
+    fireEvent.submit(submitButton);
 
     await waitFor(() => {
       expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
@@ -58,15 +56,16 @@ describe('LoginForm', () => {
     }
   });
 
-  it('renders forgot password link when showForgotPassword is true', () => {
-    render(<LoginForm showForgotPassword />, { wrapper });
-    
-    expect(screen.getByText(/forgot your password/i)).toBeInTheDocument();
+  it('renders custom submit text', () => {
+    render(<LoginForm customSubmitText="Log In" />, { wrapper });
+
+    const button = screen.getByRole('button', { name: /log in/i });
+    expect(button).toBeInTheDocument();
   });
 
-  it('renders register link when showRegisterLink is true', () => {
-    render(<LoginForm showRegisterLink />, { wrapper });
-    
-    expect(screen.getByText(/don't have an account/i)).toBeInTheDocument();
+  it('renders remember me checkbox when showRememberMe is true', () => {
+    render(<LoginForm showRememberMe />, { wrapper });
+
+    expect(screen.getByLabelText(/remember me/i)).toBeInTheDocument();
   });
 });

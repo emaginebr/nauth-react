@@ -147,6 +147,7 @@ export function validatePasswordStrength(
     requireLowercase?: boolean;
     requireNumbers?: boolean;
     requireSpecialChars?: boolean;
+    t?: (key: string, opts?: Record<string, unknown>) => string;
   } = {}
 ): PasswordStrength {
   const {
@@ -155,14 +156,18 @@ export function validatePasswordStrength(
     requireLowercase = true,
     requireNumbers = true,
     requireSpecialChars = true,
+    t,
   } = options;
+
+  const msg = (key: string, fallback: string, interpolation?: Record<string, unknown>) =>
+    t ? t(key, interpolation) : fallback;
 
   const feedback: string[] = [];
   let score = 0;
 
   // Length check
   if (password.length < minLength) {
-    feedback.push(`Password must be at least ${minLength} characters long`);
+    feedback.push(msg('passwordStrength.minLength', `Password must be at least ${minLength} characters long`, { minLength }));
   } else {
     score++;
     if (password.length >= 12) score++;
@@ -170,28 +175,28 @@ export function validatePasswordStrength(
 
   // Uppercase check
   if (requireUppercase && !/[A-Z]/.test(password)) {
-    feedback.push('Password must contain at least one uppercase letter');
+    feedback.push(msg('passwordStrength.uppercase', 'Password must contain at least one uppercase letter'));
   } else if (/[A-Z]/.test(password)) {
     score++;
   }
 
   // Lowercase check
   if (requireLowercase && !/[a-z]/.test(password)) {
-    feedback.push('Password must contain at least one lowercase letter');
+    feedback.push(msg('passwordStrength.lowercase', 'Password must contain at least one lowercase letter'));
   } else if (/[a-z]/.test(password)) {
     score++;
   }
 
   // Numbers check
   if (requireNumbers && !/\d/.test(password)) {
-    feedback.push('Password must contain at least one number');
+    feedback.push(msg('passwordStrength.number', 'Password must contain at least one number'));
   } else if (/\d/.test(password)) {
     score++;
   }
 
   // Special characters check
   if (requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    feedback.push('Password must contain at least one special character');
+    feedback.push(msg('passwordStrength.specialChar', 'Password must contain at least one special character'));
   } else if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     score++;
   }
@@ -204,6 +209,7 @@ export function validatePasswordStrength(
 /**
  * Debounce function
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -224,6 +230,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number

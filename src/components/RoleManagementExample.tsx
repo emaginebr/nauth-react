@@ -1,6 +1,6 @@
 /**
  * Complete Role Management Example
- * 
+ *
  * This file demonstrates how to use the RoleList and RoleForm components
  * together to create a complete role management system.
  */
@@ -8,11 +8,13 @@
 import { useState } from 'react';
 import { RoleList } from './RoleList';
 import { RoleForm } from './RoleForm';
+import { useNAuthTranslation } from '../i18n';
 import type { RoleInfo } from '../types';
 
 type ViewMode = 'list' | 'create' | 'edit';
 
 export function RoleManagementExample() {
+  const { t } = useNAuthTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedRole, setSelectedRole] = useState<RoleInfo | null>(null);
   const [notification, setNotification] = useState<{
@@ -20,48 +22,41 @@ export function RoleManagementExample() {
     message: string;
   } | null>(null);
 
-  // Show notification for 3 seconds
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Handle edit button click
   const handleEdit = (role: RoleInfo) => {
     setSelectedRole(role);
     setViewMode('edit');
   };
 
-  // Handle successful form submission
   const handleFormSuccess = (role: RoleInfo) => {
     const message = viewMode === 'create'
-      ? `Role "${role.name}" created successfully!`
-      : `Role "${role.name}" updated successfully!`;
-    
+      ? t('roles.roleCreatedSuccess', { name: role.name })
+      : t('roles.roleUpdatedSuccess', { name: role.name });
+
     showNotification('success', message);
     setViewMode('list');
     setSelectedRole(null);
   };
 
-  // Handle form errors
   const handleFormError = (error: Error) => {
     showNotification('error', error.message);
   };
 
-  // Handle form cancellation
   const handleCancel = () => {
     setViewMode('list');
     setSelectedRole(null);
   };
 
-  // Handle successful deletion
   const handleDeleteSuccess = () => {
-    showNotification('success', 'Role deleted successfully!');
+    showNotification('success', t('roles.roleDeletedSuccess'));
   };
 
-  // Handle deletion errors
   const handleDeleteError = (error: Error) => {
-    showNotification('error', `Failed to delete role: ${error.message}`);
+    showNotification('error', t('roles.failedToDeleteRole', { message: error.message }));
   };
 
   return (
@@ -69,9 +64,9 @@ export function RoleManagementExample() {
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Role Management</h1>
+          <h1 className="text-3xl font-bold mb-2">{t('roleManagement.title')}</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage user roles and permissions
+            {t('roleManagement.subtitle')}
           </p>
         </div>
 
@@ -94,11 +89,11 @@ export function RoleManagementExample() {
             onClick={() => setViewMode('list')}
             className="hover:text-gray-900 dark:hover:text-gray-200"
           >
-            Roles
+            {t('roleManagement.breadcrumbRoles')}
           </button>
-          {viewMode === 'create' && <span> / Create New Role</span>}
+          {viewMode === 'create' && <span> / {t('roleManagement.createNewRole')}</span>}
           {viewMode === 'edit' && selectedRole && (
-            <span> / Edit {selectedRole.name}</span>
+            <span> / {t('roleManagement.editRole', { name: selectedRole.name })}</span>
           )}
         </nav>
 
@@ -142,14 +137,14 @@ export function RoleManagementExample() {
         {/* Help Text */}
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <h3 className="font-semibold mb-2 text-blue-900 dark:text-blue-200">
-            💡 Tips
+            {t('roleManagement.tips')}
           </h3>
           <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
-            <li>• Use the search bar to quickly find roles by name or slug</li>
-            <li>• Slugs are automatically generated from the role name</li>
-            <li>• You can customize the slug or leave it empty for auto-generation</li>
-            <li>• All role operations require admin privileges</li>
-            <li>• Click on a role row to view/edit details</li>
+            <li>{t('roleManagement.tipSearch')}</li>
+            <li>{t('roleManagement.tipSlugAuto')}</li>
+            <li>{t('roleManagement.tipSlugCustom')}</li>
+            <li>{t('roleManagement.tipAdminRequired')}</li>
+            <li>{t('roleManagement.tipClickToEdit')}</li>
           </ul>
         </div>
       </div>

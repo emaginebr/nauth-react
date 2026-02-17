@@ -103,7 +103,7 @@ export interface UserSearchParams {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   status: number;
   message?: string;
@@ -135,6 +135,8 @@ export interface NAuthConfig {
   passwordMinLength?: number;
   requireSpecialChar?: boolean;
   requireNumber?: boolean;
+  language?: string;
+  translations?: Record<string, Record<string, unknown>>;
 }
 
 export interface NAuthContextValue {

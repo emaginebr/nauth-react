@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useNAuth } from '../contexts/NAuthContext';
+import { useNAuthTranslation } from '../i18n';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -11,25 +12,27 @@ import type { RegisterFormProps } from '../types';
 import { cn } from '../utils/cn';
 import { validatePasswordStrength } from '../utils/validators';
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number')
-      .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+function createRegisterSchema(t: (key: string) => string) {
+  return z
+    .object({
+      name: z.string().min(2, t('validation.nameMinLength')),
+      email: z.string().email(t('validation.emailInvalid')),
+      password: z
+        .string()
+        .min(8, t('validation.passwordMinLength'))
+        .regex(/[A-Z]/, t('validation.passwordUppercase'))
+        .regex(/[a-z]/, t('validation.passwordLowercase'))
+        .regex(/[0-9]/, t('validation.passwordNumber'))
+        .regex(/[^A-Za-z0-9]/, t('validation.passwordSpecialChar')),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('validation.passwordsDontMatch'),
+      path: ['confirmPassword'],
+    });
+}
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSuccess,
@@ -37,10 +40,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   className,
 }) => {
   const { register: registerUser } = useNAuth();
+  const { t } = useNAuthTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // const [currentStep, setCurrentStep] = useState(1);
+
+  const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
 
   const {
     register,
@@ -52,7 +57,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   });
 
   const password = watch('password');
-  const passwordStrength = password ? validatePasswordStrength(password) : null;
+  const passwordStrength = password ? validatePasswordStrength(password, { t }) : null;
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
@@ -64,7 +69,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       };
 
       const user = await registerUser(registerData);
-      
+
       if (onSuccess) {
         onSuccess(user);
       }
@@ -87,10 +92,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={cn('space-y-6', className)}>
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{t('register.fullName')}</Label>
             <Input
               id="name"
-              placeholder="John Doe"
+              placeholder={t('register.namePlaceholder')}
               {...register('name')}
               disabled={isLoading}
             />
@@ -100,11 +105,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('common.email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="name@example.com"
+              placeholder={t('register.emailPlaceholder')}
               {...register('email')}
               disabled={isLoading}
             />
@@ -112,14 +117,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               <p className="text-sm text-destructive">{errors.email.message}</p>
             )}
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('common.password')}</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Create a strong password"
+                placeholder={t('register.passwordPlaceholder')}
                 className="pr-10"
                 {...register('password')}
                 disabled={isLoading}
@@ -161,12 +166,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t('register.confirmPassword')}</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
-                placeholder="Confirm your password"
+                placeholder={t('register.confirmPasswordPlaceholder')}
                 className="pr-10"
                 {...register('confirmPassword')}
                 disabled={isLoading}
@@ -193,10 +198,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating account...
+                {t('register.creatingAccount')}
               </>
             ) : (
-              'Create Account'
+              t('register.createAccount')
             )}
           </Button>
     </form>

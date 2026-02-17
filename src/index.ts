@@ -87,5 +87,10 @@ export type { PasswordStrength } from './utils/validators';
 
 export { cn } from './utils/cn';
 
+// i18n
+export { createNAuthI18nInstance, useNAuthTranslation, NAUTH_NAMESPACE, defaultTranslations } from './i18n';
+export { default as enTranslations } from './i18n/locales/en';
+export { default as ptTranslations } from './i18n/locales/pt';
+
 // Constants
 export { API_ENDPOINTS, VERSION } from './types';
