@@ -300,6 +300,111 @@ src/
 └── styles/           # Tailwind CSS
 ```
 
+## Example App
+
+The `example-app/` directory contains a complete demo application showcasing all `nauth-react` features. It serves as both a reference implementation and a development playground.
+
+### Features Demonstrated
+
+- **Authentication flows** — Login, Register, Forgot Password, Reset Password
+- **Protected routes** — Automatic redirect to login for unauthenticated users
+- **User management** — Profile editing, password change, user search
+- **Role management** — CRUD operations on roles
+- **Dark mode** — Pre-configured dark theme with Tailwind CSS
+- **Toast notifications** — Feedback via [Sonner](https://sonner.emilkowal.dev/)
+
+### Pages & Routes
+
+| Route | Page | Access |
+|-------|------|--------|
+| `/` | Home (landing) | Public |
+| `/login` | Login | Public |
+| `/register` | Register | Public |
+| `/forgot-password` | Forgot Password | Public |
+| `/reset-password/:hash` | Reset Password | Public |
+| `/dashboard` | Dashboard | Protected |
+| `/profile` | User Profile | Protected |
+| `/change-password` | Change Password | Protected |
+| `/search-users` | Search Users | Protected |
+| `/roles` | Role Management | Protected |
+| `/user-edit` | User Edit | Protected |
+
+### Running the Example App
+
+```bash
+# From the repository root, build the library first
+npm run build
+
+# Navigate to the example app
+cd example-app
+
+# Install dependencies (uses local nauth-react via file:..)
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env and set VITE_API_URL to your NAuth API backend
+
+# Start the dev server
+npm run dev
+```
+
+The app starts at `http://localhost:5173` by default.
+
+### Example App Commands
+
+```bash
+npm run dev        # Vite dev server with HMR
+npm run build      # TypeScript check + production build
+npm run preview    # Preview production build
+npm run type-check # TypeScript check only
+npm run lint       # ESLint
+```
+
+### Tech Stack
+
+- **React 19** + **TypeScript**
+- **Vite 7** — Fast dev server and build
+- **Tailwind CSS 3** — Utility-first styling
+- **react-router-dom v7** — Client-side routing
+- **Sonner** — Toast notifications
+- **Lucide React** — Icons
+
+### Project Structure
+
+```
+example-app/
+├── src/
+│   ├── main.tsx              # App entry point
+│   ├── App.tsx               # Root component with routing + NAuthProvider
+│   ├── index.css             # Tailwind global styles + CSS variables
+│   ├── components/
+│   │   ├── Layout.tsx        # Main layout with Navbar + Outlet
+│   │   ├── Navbar.tsx        # Navigation header (auth-aware)
+│   │   ├── ProtectedRoute.tsx # Route guard component
+│   │   ├── UserMenu.tsx      # User dropdown menu
+│   │   └── ui/Card.tsx       # Reusable Card component
+│   ├── pages/
+│   │   ├── HomePage.tsx          # Landing page
+│   │   ├── LoginPage.tsx         # Login form
+│   │   ├── RegisterPage.tsx      # Registration form
+│   │   ├── ForgotPasswordPage.tsx # Password recovery
+│   │   ├── ResetPasswordPage.tsx  # Password reset
+│   │   ├── DashboardPage.tsx     # Protected dashboard
+│   │   ├── ProfilePage.tsx       # User profile
+│   │   ├── ChangePasswordPage.tsx # Change password
+│   │   ├── SearchUsersPage.tsx   # User search
+│   │   ├── RolesPage.tsx         # Role management
+│   │   └── UserEditPage.tsx      # User editing
+│   └── lib/
+│       ├── constants.ts      # Routes and app constants
+│       └── utils.ts          # Utility functions
+├── .env.example              # Environment template
+├── tailwind.config.js        # Tailwind configuration
+├── vite.config.ts            # Vite build configuration
+└── package.json              # Dependencies and scripts
+```
+
 ## Development
 
 ```bash
@@ -327,6 +432,7 @@ This package is part of the **NAuth** ecosystem. The main project is [NAuth.API]
 | **[NAuth.DTO](https://github.com/landim32/NAuth.DTO)** | Shared Data Transfer Objects (NuGet) |
 | **[NAuth.ACL](https://github.com/landim32/NAuth.ACL)** | HTTP client library (NuGet) |
 | **nauth-react** | React component library — you are here |
+| **example-app/** | Demo application (included in this repo) |
 | **[NAuth.App](https://github.com/landim32/NAuth.APP)** | Frontend web application |
 
 ## License
