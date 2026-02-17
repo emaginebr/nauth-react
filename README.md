@@ -9,13 +9,14 @@ Modern React authentication component library for [NAuth API](https://github.com
 
 ## Features
 
-✨ **Complete Auth Suite** - Login, Register, Password Recovery, Change Password  
-🎨 **Theme Support** - Light/Dark mode with system detection  
-📦 **Tree-shakeable** - Import only what you need  
-🔒 **Type-Safe** - Full TypeScript support  
-🎯 **Security** - Device fingerprinting with FingerprintJS  
-♿ **Accessible** - WCAG compliant  
-📱 **Responsive** - Mobile-first design  
+✨ **Complete Auth Suite** - Login, Register, Password Recovery, Change Password
+🎨 **Theme Support** - Light/Dark mode with system detection
+🌐 **Internationalization** - Built-in i18n with English and Portuguese (BR), extensible to any language
+📦 **Tree-shakeable** - Import only what you need
+🔒 **Type-Safe** - Full TypeScript support
+🎯 **Security** - Device fingerprinting with FingerprintJS
+♿ **Accessible** - WCAG compliant
+📱 **Responsive** - Mobile-first design
 
 ## Installation
 
@@ -230,6 +231,8 @@ const { theme, setTheme } = useTheme();
     enableFingerprinting: true,                // Optional
     storageType: 'localStorage',               // Optional
     redirectOnUnauthorized: '/login',          // Optional
+    language: 'pt',                            // Optional — 'en' (default) or 'pt'
+    translations: { ... },                     // Optional — custom/override translations
     onAuthChange: (user) => {},                // Optional
     onLogin: (user) => {},                     // Optional
     onLogout: () => {},                        // Optional
@@ -264,6 +267,122 @@ await api.uploadImage(file);
 />
 ```
 
+## Internationalization (i18n)
+
+All components are fully internationalized using [i18next](https://www.i18next.com/). The library ships with **English** and **Portuguese (BR)** translations covering all forms, validation messages, and UI labels.
+
+### Supported Languages
+
+| Code | Language | Coverage |
+|------|----------|----------|
+| `en` | English (default) | Full |
+| `pt` | Portuguese (Brazil) | Full |
+
+### Setting the Language
+
+Pass `language` in the provider config:
+
+```tsx
+<NAuthProvider
+  config={{
+    apiUrl: 'https://your-api.com',
+    language: 'pt', // All components render in Portuguese
+  }}
+>
+  <App />
+</NAuthProvider>
+```
+
+To switch language dynamically, update the `language` prop — the provider reacts to changes automatically.
+
+### Overriding Translations
+
+You can override any built-in translation key or add new ones via the `translations` config:
+
+```tsx
+<NAuthProvider
+  config={{
+    apiUrl: 'https://your-api.com',
+    language: 'en',
+    translations: {
+      en: {
+        login: { title: 'Welcome Back!' },
+        common: { email: 'Email Address' },
+      },
+    },
+  }}
+>
+  <App />
+</NAuthProvider>
+```
+
+### Adding a New Language
+
+Import the default translations as a reference and provide your own:
+
+```tsx
+import { defaultTranslations } from 'nauth-react';
+
+// Use defaultTranslations.en or defaultTranslations.pt as a template
+<NAuthProvider
+  config={{
+    apiUrl: 'https://your-api.com',
+    language: 'es',
+    translations: {
+      es: {
+        common: { email: 'Correo electrónico', password: 'Contraseña', ... },
+        login: { title: 'Iniciar Sesión', ... },
+        // ... all other keys
+      },
+    },
+  }}
+/>
+```
+
+### Using Translations in Your Components
+
+The library exports the `useNAuthTranslation` hook for accessing translations in your own components:
+
+```tsx
+import { useNAuthTranslation } from 'nauth-react';
+
+function MyComponent() {
+  const { t } = useNAuthTranslation();
+  return <p>{t('common.loading')}</p>;
+}
+```
+
+### Translation Categories
+
+| Category | Keys | Description |
+|----------|------|-------------|
+| `common` | 27 | Basic UI labels (email, password, name, cancel, loading...) |
+| `validation` | 23 | Form validation messages (email, password, CPF/CNPJ...) |
+| `login` | 5 | Login form (title, remember me, placeholders) |
+| `register` | 8 | Registration form (title, password confirmation) |
+| `forgotPassword` | 8 | Password recovery flow |
+| `resetPassword` | 9 | Password reset flow |
+| `changePassword` | 5 | Change password form |
+| `search` | 8 | User search and pagination |
+| `status` | 5 | User status (Active, Inactive, Suspended, Blocked) |
+| `roles` | 22 | Role management CRUD |
+| `userEdit` | 50+ | User form (personal info, phones, addresses) |
+| `roleManagement` | 11 | Role management page |
+| `passwordStrength` | 5 | Password strength indicators |
+
+### Exported i18n Utilities
+
+```tsx
+import {
+  createNAuthI18nInstance,  // Factory to create standalone i18n instances
+  useNAuthTranslation,      // Hook for accessing translations
+  NAUTH_NAMESPACE,          // Namespace constant ('nauth')
+  defaultTranslations,      // { en, pt } — all built-in translations
+  enTranslations,           // English translations object
+  ptTranslations,           // Portuguese translations object
+} from 'nauth-react';
+```
+
 ## Utilities
 
 ```tsx
@@ -294,6 +413,9 @@ src/
 ├── components/       # Auth forms + UI components
 ├── contexts/         # NAuthContext, ThemeContext
 ├── hooks/            # useAuth, useUser, useProtectedRoute, useTheme
+├── i18n/             # Internationalization setup
+│   ├── index.ts      # i18next config, hooks, exports
+│   └── locales/      # Translation files (en.ts, pt.ts)
 ├── services/         # NAuth API client
 ├── types/            # TypeScript definitions
 ├── utils/            # Validators, formatters
@@ -433,7 +555,6 @@ This package is part of the **NAuth** ecosystem. The main project is [NAuth.API]
 | **[NAuth.ACL](https://github.com/landim32/NAuth.ACL)** | HTTP client library (NuGet) |
 | **nauth-react** | React component library — you are here |
 | **example-app/** | Demo application (included in this repo) |
-| **[NAuth.App](https://github.com/landim32/NAuth.APP)** | Frontend web application |
 
 ## License
 
