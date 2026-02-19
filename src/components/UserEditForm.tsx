@@ -75,7 +75,7 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({
   onCancel,
   className,
 }) => {
-  const { getUserById, updateUser, uploadImage, fetchRoles } = useNAuth();
+  const { getUserById, updateUser, createUser, uploadImage, fetchRoles } = useNAuth();
   const { t } = useNAuthTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(false);
@@ -315,7 +315,7 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({
         updateAt: new Date().toISOString(),
       };
 
-      const result = await updateUser(payload);
+      const result = isEditMode ? await updateUser(payload) : await createUser(payload);
 
       if (onSuccess) {
         onSuccess(result);

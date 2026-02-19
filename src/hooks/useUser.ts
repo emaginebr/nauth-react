@@ -7,6 +7,7 @@ export const useUser = () => {
     user: context.user,
     isLoading: context.isLoading,
     updateUser: context.updateUser,
+    createUser: context.createUser,
     changePassword: context.changePassword,
     uploadImage: context.uploadImage,
     refreshUser: context.refreshUser,

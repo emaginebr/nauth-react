@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Trash2, Edit, Plus, Loader2, Search, AlertCircle } from 'lucide-react';
+import { Trash2, Edit, Plus, Loader2, Search, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNAuth } from '../contexts/NAuthContext';
 import { useNAuthTranslation } from '../i18n';
 import { Button } from './ui/button';
@@ -171,11 +171,11 @@ export const RoleList: React.FC<RoleListProps> = ({
     }
 
     return (
-        <>
-            {/* Header with Search and Create Button */}
+        <div className={cn('space-y-6', styles.container, className)}>
+            {/* Search Bar */}
             <div className={cn('flex items-center gap-4', styles.searchBar)}>
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                         type="text"
                         placeholder={t('roles.searchPlaceholder')}
@@ -195,135 +195,149 @@ export const RoleList: React.FC<RoleListProps> = ({
                 )}
             </div>
 
-            {/* Error Message */}
-            {error && (
-                <div className="p-4 bg-destructive/10 text-destructive rounded-lg border border-destructive/20 flex items-center gap-2">
-                    <AlertCircle size={18} />
-                    <p>{error}</p>
+            {/* Page Size Selector */}
+            <div className="flex items-center gap-4">
+                <Label htmlFor="pageSize" className="whitespace-nowrap">{t('common.itemsPerPage')}</Label>
+                <select
+                    id="pageSize"
+                    value={pageSize}
+                    onChange={handlePageSizeChange}
+                    className="border rounded-md px-3 py-2 bg-white dark:bg-gray-800 dark:border-gray-700"
+                >
+                    {pageSizeOptions.map((size) => (
+                        <option key={size} value={size}>
+                            {size}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-2">{t('common.loading')}</span>
                 </div>
             )}
 
-            {/* Loading State */}
-            {loading ? (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="animate-spin text-muted-foreground" size={32} />
+            {/* Error State */}
+            {error && !loading && (
+                <div className="flex items-center gap-2 p-4 border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 rounded-md">
+                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    <div className="flex-1">
+                        <p className="text-sm font-medium text-red-800 dark:text-red-200">{t('common.error')}</p>
+                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={fetchRoles}>
+                        {t('common.retry')}
+                    </Button>
                 </div>
-            ) : (
+            )}
+
+            {/* Results Table */}
+            {!loading && !error && (
                 <>
-                    {/* Table */}
                     <div className={cn('border rounded-lg overflow-hidden', styles.table)}>
-                        <table className="w-full">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    <th className="text-left p-4 font-semibold">{t('common.id')}</th>
-                                    <th className="text-left p-4 font-semibold">{t('common.name')}</th>
-                                    <th className="text-left p-4 font-semibold">{t('common.slug')}</th>
-                                    <th className="text-right p-4 font-semibold">{t('common.actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedRoles.length === 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                                     <tr>
-                                        <td colSpan={4} className="text-center p-8 text-muted-foreground">
-                                            {searchTerm ? t('roles.noRolesFound') : t('roles.noRolesAvailable')}
-                                        </td>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('common.id')}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('common.name')}</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('common.slug')}</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('common.actions')}</th>
                                     </tr>
-                                ) : (
-                                    paginatedRoles.map((role) => (
-                                        <tr
-                                            key={role.roleId}
-                                            className="border-t hover:bg-muted/30 transition-colors cursor-pointer"
-                                            onClick={() => handleRoleClick(role)}
-                                        >
-                                            <td className="p-4 text-gray-300">{role.roleId}</td>
-                                            <td className="p-4 font-medium text-gray-100">{role.name}</td>
-                                            <td className="p-4 text-gray-400">{role.slug}</td>
-                                            <td className="p-4">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleEditRole(role);
-                                                        }}
-                                                        className="flex items-center gap-1 bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 hover:text-white"
-                                                    >
-                                                        <Edit size={14} />
-                                                        {t('common.edit')}
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            confirmDelete(role);
-                                                        }}
-                                                        className="flex items-center gap-1"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                        {t('common.delete')}
-                                                    </Button>
-                                                </div>
+                                </thead>
+                                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {paginatedRoles.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                                {searchTerm ? t('roles.noRolesFound') : t('roles.noRolesAvailable')}
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        paginatedRoles.map((role) => (
+                                            <tr
+                                                key={role.roleId}
+                                                className="hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                                                onClick={() => handleRoleClick(role)}
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{role.roleId}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{role.name}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{role.slug}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEditRole(role);
+                                                            }}
+                                                            className="flex items-center gap-1"
+                                                        >
+                                                            <Edit size={14} />
+                                                            {t('common.edit')}
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                confirmDelete(role);
+                                                            }}
+                                                            className="flex items-center gap-1"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                            {t('common.delete')}
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    {/* Pagination */}
+                    {/* Pagination Controls */}
                     {paginatedRoles.length > 0 && (
                         <div className={cn('flex items-center justify-between', styles.pagination)}>
-                            <div className="flex items-center gap-2 text-sm text-gray-200">
-                                <span>
-                                    {t('common.showingRange', {
-                                        from: (currentPage - 1) * pageSize + 1,
-                                        to: Math.min(currentPage * pageSize, filteredRoles.length),
-                                        total: filteredRoles.length,
-                                    })}
-                                </span>
-                                <span className="mx-2">|</span>
-                                <Label htmlFor="pageSize" className="text-sm text-gray-200">
-                                    {t('common.itemsPerPage')}
-                                </Label>
-                                <select
-                                    id="pageSize"
-                                    value={pageSize}
-                                    onChange={handlePageSizeChange}
-                                    className="border rounded px-2 py-1 bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                                >
-                                    {pageSizeOptions.map((size) => (
-                                        <option key={size} value={size}>
-                                            {size}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div className="text-sm text-gray-700 dark:text-gray-300">
+                                {t('common.showingRange', {
+                                    from: (currentPage - 1) * pageSize + 1,
+                                    to: Math.min(currentPage * pageSize, filteredRoles.length),
+                                    total: filteredRoles.length,
+                                })}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handlePreviousPage}
-                                    disabled={!hasPreviousPage}
-                                    className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700"
-                                >
-                                    {t('common.previous')}
-                                </Button>
-                                <span className="text-sm text-gray-300">
+                            <div className="flex items-center gap-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
                                     {t('common.pageOf', { page: currentPage, totalPages })}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleNextPage}
-                                    disabled={!hasNextPage}
-                                    className="bg-gray-700 border-gray-600 text-gray-100 hover:bg-gray-600 hover:text-white disabled:bg-gray-800 disabled:text-gray-500 disabled:border-gray-700"
-                                >
-                                    {t('common.next')}
-                                </Button>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handlePreviousPage}
+                                        disabled={!hasPreviousPage}
+                                    >
+                                        <ChevronLeft className="h-4 w-4 mr-1" />
+                                        {t('common.previous')}
+                                    </Button>
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleNextPage}
+                                        disabled={!hasNextPage}
+                                    >
+                                        {t('common.next')}
+                                        <ChevronRight className="h-4 w-4 ml-1" />
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -358,6 +372,6 @@ export const RoleList: React.FC<RoleListProps> = ({
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 };
